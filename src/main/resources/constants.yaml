@@ -1,0 +1,14 @@
+json:
+  logger:
+    application:
+      name: "pii-tokenizer-poc-api"
+      version: "1.0"
+      
+http:
+  listener:
+    port: "8091"
+    
+process:
+  responseTimeoutSecs: "35000"
+
+ 

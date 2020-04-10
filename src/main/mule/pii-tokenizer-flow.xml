@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:piitok="http://www.mulesoft.org/schema/mule/piitok" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/piitok http://www.mulesoft.org/schema/mule/piitok/current/mule-piitok.xsd">
+	<piitok:config name="PII_Tokenization_Config1" doc:name="PII Tokenization Config" doc:id="50df86f4-b953-4b1f-8b90-1b25ce474698" >
+		<piitok:connection username="app_thalesencp_dev" password="A3%D0mf9+@Ym" url="https://httpbin.org/status/502"/>
+	</piitok:config>
+	<flow name="piiTokenizerFlow" doc:id="beca0cdb-21ce-4d4a-a42a-04304ca72096" >
+			<ee:transform doc:name="Set Tokinzation Rules" doc:id="f6f96999-566d-4ab1-be19-73d68a560c99">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="rules"><![CDATA[%dw 2.0
+output application/json
+---
+[{
+	"paths": [{
+                "template": "vttCustomerEmail",
+                "group": "vtgCustomerPII",
+                "path": "/EmailAddress"
+            },
+            {
+			"template": "vttCustomerBankAccountNumber",
+			"group": "vtgCustomerPII",
+			"path": "/AccountId"
+			}
+			]
+}]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<flow-ref doc:name="tokenize-Sub_Flow" doc:id="2c600e51-5f9b-474e-9df1-17d66d3f95fd" name="tokenize-Sub_Flow" />
+		<set-payload value="#[vars.tokenizedPayload]" doc:name="Set Payload" doc:id="b11821d7-dfb5-42e0-bdc9-0bb7039a4b65" />
+	</flow>
+	<sub-flow name="tokenize-Sub_Flow" doc:id="0401ee17-6eba-4e02-bf0b-89e01de60eee" >
+		<json-logger:logger doc:name="Before Tokenization (INFO)" doc:id="0bf83277-8557-47a0-af68-a32467f1845e" config-ref="JSON_Logger_Config" tracePoint="BEFORE_REQUEST" endpoint="POST:https://httpbin.org/status/502" message='Before tokenization'>
+			<json-logger:content ><![CDATA[#[{}]]]></json-logger:content>
+		</json-logger:logger>
+		<piitok:tokenize doc:name="Tokenize" doc:id="d9e7a6b7-340e-497a-81ab-8cb256e0533c" json="#[payload]" target="tokenizedPayload" rules="#[vars.rules]" targetValue="#[output application/json --- payload]" config-ref="PII_Tokenization_Config1"/>
+		<json-logger:logger doc:name="After Tokenization (INFO)" doc:id="e9502d9b-b922-4a2d-bd3f-320467813e94" config-ref="JSON_Logger_Config" tracePoint="AFTER_REQUEST" endpoint="POST:https://httpbin.org/status/502" message='After tokenization - TokenizedPayload'>
+			<json-logger:content ><![CDATA[#[output application/json 
+--- 
+{
+	TokenizedPayload : vars.tokenizedPayload
+}]]]></json-logger:content>
+		</json-logger:logger>
+	</sub-flow>
+</mule>

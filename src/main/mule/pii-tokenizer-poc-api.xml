@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+    <apikit:config name="pii-tokenizer-api-config" raml="pii-tokenizer-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:listener-config name="commercial-prc-accounts-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="${http.listener.port}" />
+    </http:listener-config>
+    <json-logger:config name="JSON_Logger_Config" doc:name="JSON Logger Config" doc:id="31dc30ed-83a6-4c62-b418-344b7112123b" environment="${env}" />
+    <configuration-properties doc:name="Configuration properties" doc:id="ddc1c9d1-a3a3-4556-8a15-283245138247" file="constants.yaml" />
+    <api-gateway:autodiscovery apiId="16097423" doc:name="API Autodiscovery" doc:id="ee389558-8edb-4f1e-8c34-8158ae34b059" flowRef="pii-tokenizer-poc-api-main" />
+	<flow name="pii-tokenizer-poc-api-main">
+        <http:listener config-ref="commercial-prc-accounts-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[output application/java
+---
+{
+	"X-Correlation-Id" : correlationId
+}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="pii-tokenizer-api-config" />
+    </flow>
+    <flow name="pii-tockenizer-poc-api-console">
+        <http:listener config-ref="commercial-prc-accounts-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]" />
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="pii-tokenizer-api-config" />
+    </flow>
+    <flow name="post:\tokenize-old:pii-tokenizer-api-config">
+        <logger level="INFO" message="post:\token:pii-tokenizer-api-config" />
+		<flow-ref doc:name="piiTokenizerFlow" doc:id="c35f61a2-b671-4bed-8d50-311afa6195ea" name="piiTokenizerFlow" />
+    </flow>
+</mule>

@@ -1,0 +1,38 @@
+environment: "dev"
+http:
+  host: "devopenapi.velobank.com" 
+  port: "443"
+  listener:
+    port: "8091"
+
+api: 
+  id: "15797174"
+
+logLevel: "DEBUG"
+
+COMMERCIAL:
+  SUBACCOUNT:
+    CREATE:
+      PATH: "/api/system/commercial/subaccounts"
+    UPDATE:
+      PATH: "/api/system/commercial/accounts/{accountnumber}"
+  ACCOUNT:
+    BALANCE_INQUIRY:
+      PATH: "/api/system/commercial/accounts/{accountnumber}/balanceinquiry"
+  TRANSFER:
+    PATH: "/api/system/commercial/accounttransfer/transferfunds"
+  INTRA_BANK_TRANSFER:
+    PATH: "/api/system/commercial/intrabanktransfer/transferfunds"
+  WIRE_TRANSFER:
+    PATH: "/api/system/commercial/wiretransfers/wire"
+
+azure:
+  ehub:
+    onboarding:
+      nameSpace: "ewaz-de01-usw2-vfa-eh-onboarding-default-01.servicebus.windows.net"
+      endPoint: "sb://ewaz-de01-usw2-vfa-eh-onboarding-default-01.servicebus.windows.net"
+      hubName: "commecial-accounts-01"
+      keyName: "Send"
+      key: "hO5iBnS2dUNARzQdHfkCZgIyoGOzokZpstTcD6CVvgA="
+
+LOG_ERROR_DETAILS: "false"
